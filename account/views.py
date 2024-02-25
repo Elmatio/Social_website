@@ -17,7 +17,7 @@ def edit(request):
                                        data=request.POST,
                                        files=request.FILES)
 
-        if user_form.is_valid() and profile_form.is_valid():
+        if user_form.is_valid() & profile_form.is_valid():
             user_form.save()
             profile_form.save()
             messages.success(request, 'Profile updated successfully')
@@ -26,10 +26,12 @@ def edit(request):
     else:
         user_form = UserEditForm(instance=request.user)
         profile_form = ProfileEditForm(instance=request.user.profile)
+
     return render(request,
                   'account/edit.html',
                   {'user_form': user_form,
                    'profile_form': profile_form})
+
 
 @login_required
 def dashboard(request):

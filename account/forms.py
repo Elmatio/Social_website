@@ -16,6 +16,7 @@ class UserEditForm(forms.ModelForm):
             raise forms.ValidationError('Email already in use.')
         return data
 
+
 class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = Profile
