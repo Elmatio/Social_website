@@ -1,21 +1,14 @@
 from django import forms
 from .models import Image
-<<<<<<< HEAD
 from django.core.files.base import ContentFile
 from django.utils.text import slugify
 import requests
-=======
->>>>>>> origin/master
 
 
 class ImageCreateForm(forms.ModelForm):
     class Meta:
         model = Image
-<<<<<<< HEAD
         fields = ['title', 'url', 'description']
-=======
-        fields = ['title', 'ur', 'description']
->>>>>>> origin/master
         widgets = {
             'url': forms.HiddenInput,
         }
@@ -25,7 +18,6 @@ class ImageCreateForm(forms.ModelForm):
         valid_extensions = ['jpg', 'jpeg', 'png']
         extension = url.rsplit('.', 1)[1].lower()
         if extension not in valid_extensions:
-<<<<<<< HEAD
             raise forms.ValidationError('The given URL does not'\
                                         'match valid image extensions.')
         return url
@@ -43,7 +35,3 @@ class ImageCreateForm(forms.ModelForm):
         if commit:
             image.save()
         return image
-=======
-            raise forms.ValidationError('The given URL does not \match valid image extensions.')
-        return url
->>>>>>> origin/master
