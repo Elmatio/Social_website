@@ -8,6 +8,14 @@ from .models import Image
 from django.http import HttpResponse
 from django.core.paginator import Paginator, EmptyPage, \
     PageNotAnInteger
+from actions.utils import create_action
+import redis
+from django.conf import settings
+
+
+r = redis.Redis(host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                db=settings.REDIS_DB)
 
 
 @login_required
@@ -41,9 +49,13 @@ def image_list(request):
 
 def image_detail(request, id, slug):
     image = get_object_or_404(Image, id=id, slug=slug)
+    #общее число изображений +1
+    total_views = r.incr(f'image:{image.id}:views')
+    r.zincrby('image_ranking', 1, image.id)
     return render(request,
                   'images/image/detail.html',
-                  {'image': image})
+                  {'image': image,
+                   'total_views': total_views})
 
 
 @login_required
@@ -55,6 +67,7 @@ def image_create(request):
             new_image = form.save(commit=False)
             new_image.user = request.user
             new_image.save()
+            create_action(request.user, 'bookmarked image', new_image)
             messages.success(request, 'Image added successfully')
             return redirect(new_image.get_absolute_url())
     else:
@@ -75,6 +88,7 @@ def image_like(request):
             image = Image.objects.get(id=image_id)
             if action == 'like':
                 image.users_like.add(request.user)
+                create_action(request.user, 'likes', image)
             else:
                 image.users_like.remove(request.user)
             return JsonResponse({'status': 'ok'})
@@ -82,3 +96,16 @@ def image_like(request):
             pass
         return JsonResponse({'status': 'error'})
 
+
+@login_required
+def image_ranking(request):
+    image_ranking = r.zrange('image_ranking', 0, -1,
+                             desc=True)[:10]
+    image_ranking_ids = [int(id) for id in image_ranking]
+    most_viewed = list(Image.objects.filter(
+        id__in=image_ranking_ids))
+    most_viewed.sort(key=lambda x: image_ranking_ids.index(x.id))
+    return render(request,
+                  'images/image/ranking.html',
+                  {'section': 'images',
+                   'most_viewed': most_viewed})
